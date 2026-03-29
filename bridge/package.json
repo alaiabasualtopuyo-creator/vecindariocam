@@ -16,3 +16,30 @@
     "node": ">=18.0.0"
   }
 }
+```
+
+Commit: `add: bridge/package.json`
+
+---
+
+**Archivo 2** — Mismo proceso: "Add file" → "Create new file"
+
+En el nombre escribe:
+```
+bridge/.env.example
+```
+
+Y en el contenido pega esto:
+```
+# ─── Supabase ───────────────────────────────────────────────
+SUPABASE_URL=https://TU-PROYECTO.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+# ─── Cámara ─────────────────────────────────────────────────
+RTSP_URL=rtsp://admin:@192.168.1.100:554/onvif1
+
+# ─── Grabación ──────────────────────────────────────────────
+CLIP_DURATION=120
+RETENTION_HOURS=72
+CAMERA_ID=qc5-estacionamiento
+TEMP_DIR=/tmp/vecindariocam
