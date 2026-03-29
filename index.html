@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VecindarioCam — Estacionamiento</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+    :root {
+      --bg: #0d0f0e;
+      --surface: #161918;
+      --surface2: #1e2220;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e8ebe8;
+      --muted: #7a8a7e;
+      --green: #4ade80;
+      --green-dim: #166534;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --teal: #2dd4bf;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── AUTH SCREEN ─── */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 40px 32px;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .cam-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cam-icon svg { color: #0d0f0e; }
+
+    .auth-logo h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .auth-logo p { font-size: 12px; color: var(--muted); }
+
+    .auth-card label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      margin-top: 18px;
+    }
+
+    .auth-card input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .auth-card input:focus { border-color: var(--green); }
+
+    .btn-primary {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: var(--green);
+      color: #0d0f0e;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    .auth-error {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--red);
+      display: none;
+    }
+
+    .auth-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+    }
+
+    .auth-divider span {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .btn-google:hover {
+      border-color: var(--border2);
+      background: #252a27;
+    }
+
+    /* ─── MAIN APP ─── */
+    #app { display: none; }
+
+    header {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-left h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--green);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .offline-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--red);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-pill {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: inherit;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      width: fit-content;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      padding: 7px 18px;
+      border-radius: 7px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab.active {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    /* ─── LIVE PANEL ─── */
+    .live-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .live-video-wrap {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .live-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .live-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .cam-placeholder {
+      width: 64px;
+      height: 64px;
+      border: 2px solid var(--border2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .live-status-text {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .live-status-text a {
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .live-info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .live-ts { color: var(--muted); }
+
+    .camera-id {
+      color: var(--teal);
+      font-size: 11px;
+    }
+
+    /* ─── HISTORY GRID ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .count-badge {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .recordings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .recording-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+
+    .recording-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-1px);
+    }
+
+    .recording-thumb {
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 11px;
+      position: relative;
+    }
+
+    .recording-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .play-btn {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.35);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .recording-card:hover .play-btn { opacity: 1; }
+
+    .play-circle {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .recording-meta {
+      padding: 12px 14px;
+    }
+
+    .rec-time {
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--text);
+    }
+
+    .rec-date {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .rec-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .tag-motion {
+      background: rgba(251,191,36,0.12);
+      border: 1px solid rgba(251,191,36,0.25);
+      color: var(--amber);
+    }
+
+    .tag-normal {
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.15);
+      color: var(--green);
+    }
+
+    .tag-duration {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+    }
+
+    .empty-state p { font-size: 14px; margin-top: 8px; }
+
+    /* ─── MODAL ─── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 720px;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 { font-size: 14px; font-weight: 500; }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .modal video {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: block;
+      background: #000;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* ─── SETUP TAB ─── */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media(max-width: 640px) {
+      .setup-grid { grid-template-columns: 1fr; }
+    }
+
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .setup-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .setup-card p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--teal);
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.6;
+    }
+
+    .step-list {
+      list-style: none;
+      counter-reset: steps;
+    }
+
+    .step-list li {
+      counter-increment: steps;
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .step-list li::before {
+      content: counter(steps);
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--green);
+      margin-top: 1px;
+    }
+
+    .setup-card span.highlight { color: var(--green); }
+
+    .notifications-section {
+      margin-top: 24px;
+    }
+
+    .notifications-section h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .notif-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .notif-info h4 { font-size: 13px; font-weight: 500; }
+    .notif-info p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .slider-toggle {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slider-toggle::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--muted);
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s;
+    }
+
+    .toggle input:checked + .slider-toggle {
+      background: rgba(74,222,128,0.2);
+      border-color: rgba(74,222,128,0.4);
+    }
+
+    .toggle input:checked + .slider-toggle::before {
+      background: var(--green);
+      transform: translateX(18px);
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 60px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Toasts */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.2s ease;
+      min-width: 240px;
+    }
+
+    .toast.success { border-color: rgba(74,222,128,0.3); }
+    .toast.warning { border-color: rgba(251,191,36,0.3); }
+
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @media(max-width: 600px) {
+      main { padding: 16px; }
+      .recordings-grid { grid-template-columns: 1fr; }
+      header { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── AUTH SCREEN ─── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="cam-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      </div>
+      <div>
+        <h1>VecindarioCam</h1>
+        <p>Estacionamiento · Seguridad vecinal</p>
+      </div>
+    </div>
+    <label>Correo electrónico</label>
+    <input type="email" id="login-email" placeholder="tu@correo.com" autocomplete="email"/>
+    <label>Contraseña</label>
+    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+    <div id="auth-error" class="auth-error"></div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Ingresar</button>
+
+    <div class="auth-divider"><span>o continuar con</span></div>
+
+    <button class="btn-google" id="google-btn" onclick="doGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.8 18.9 13 24 13c3.1 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+        <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.2 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-8H6.3C9.7 35.6 16.3 40 24 44z"/>
+        <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+      </svg>
+      Ingresar con Google
+    </button>
+
+    <p class="auth-note">Acceso solo para vecinos autorizados.<br/>¿Problemas? Contacta al administrador.</p>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ─── -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="cam-icon" style="width:28px;height:28px;border-radius:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      </div>
+      <h1>VecindarioCam</h1>
+      <div id="status-badge" class="offline-badge">
+        <div style="width:6px;height:6px;background:var(--red);border-radius:50%"></div>
+        OFFLINE
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="user-pill" id="user-email-display"></span>
+      <button class="btn-ghost" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('live', this)">En vivo</button>
+      <button class="tab" onclick="switchTab('history', this)">Historial 72h</button>
+      <button class="tab" onclick="switchTab('setup', this)">Configuración</button>
+    </div>
+
+    <!-- LIVE TAB -->
+    <div id="tab-live">
+      <div class="live-panel">
+        <div class="live-video-wrap" id="live-wrap">
+          <div class="live-overlay" id="live-overlay">
+            <div class="cam-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+            <div class="live-status-text" id="live-status-text">
+              Conectando a la cámara...<br/>
+              <span style="font-size:11px">El bridge debe estar activo en tu red local</span>
+            </div>
+          </div>
+          <video id="live-video" autoplay muted playsinline style="display:none"></video>
+        </div>
+        <div class="live-info-bar">
+          <span class="live-ts" id="live-clock">--:--:--</span>
+          <span class="camera-id">QC5 · YIIYRY · <span id="cam-location">Estacionamiento</span></span>
+          <span style="font-size:11px;color:var(--muted)">HLS via bridge</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:13px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--amber);font-size:12px;font-family:'IBM Plex Mono',monospace">NOTA PILOTO</strong><br/>
+        El streaming en vivo requiere que el <strong style="color:var(--text)">bridge script</strong> esté corriendo en la red local.
+        Ve a la pestaña <strong style="color:var(--text)">Configuración</strong> para instrucciones de instalación.
+        El historial de grabaciones funciona de forma independiente.
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" style="display:none">
+      <div class="section-header">
+        <h2>Grabaciones — últimas 72 horas</h2>
+        <span class="count-badge" id="rec-count">cargando...</span>
+      </div>
+      <div class="recordings-grid" id="recordings-grid">
+        <div class="loading-center" style="grid-column:1/-1">
+          <div class="spinner"></div>
+          <span>Cargando grabaciones...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP TAB -->
+    <div id="tab-setup" style="display:none">
+      <div class="setup-grid">
+        <div class="setup-card">
+          <h3>1 · Instalar bridge script</h3>
+          <p>Corre este script en tu PC conectada al mismo WiFi que la cámara QC5. Solo necesitas Node.js instalado.</p>
+          <div class="code-block">npm install -g ffmpeg-static
+git clone github.com/tu-usuario/vecindariocam
+cd vecindariocam/bridge
+cp .env.example .env
+# Edita .env con tu URL Supabase
+node bridge.js</div>
+        </div>
+
+        <div class="setup-card">
+          <h3>2 · Encontrar IP de la cámara</h3>
+          <p>La cámara QC5 generalmente expone RTSP en el puerto 554. Primero encuentra su IP en tu router.</p>
+          <div class="code-block"># En terminal (mismo WiFi):
+# Mac/Linux:
+arp -a | grep -i "d4:a3"
+
+# Probar stream con VLC:
+rtsp://admin:@192.168.X.X:554/stream
+
+# URL común QC5:
+rtsp://IP:554/onvif1</div>
+        </div>
+
+        <div class="setup-card">
+          <h3>3 · Variables de entorno</h3>
+          <p>El bridge necesita conectarse a tu proyecto Supabase. Configura estas variables.</p>
+          <div class="code-block">SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_KEY=eyJ...
+RTSP_URL=rtsp://admin:@192.168.1.X:554/onvif1
+CLIP_DURATION=120
+CAMERA_ID=qc5-estacionamiento
+RETENTION_HOURS=72</div>
+        </div>
+
+        <div class="setup-card">
+          <h3>4 · Tabla Supabase</h3>
+          <p>Ejecuta este SQL en el editor de Supabase para crear la tabla de grabaciones.</p>
+          <div class="code-block">create table recordings (
+  id uuid default gen_random_uuid() primary key,
+  camera_id text not null,
+  started_at timestamptz not null,
+  duration_sec int,
+  storage_path text not null,
+  has_motion bool default false,
+  created_at timestamptz default now()
+);
+-- RLS: solo usuarios auth pueden leer
+alter table recordings enable row level security;
+create policy "vecinos read" on recordings
+  for select using (auth.role() = 'authenticated');</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="setup-card">
+          <h3>Instrucciones Supabase Auth — vecinos</h3>
+          <p>Para agregar vecinos autorizados, ve a tu panel Supabase → Authentication → Users → Invite user. Solo necesitan su correo y crearán su contraseña. <span class="highlight">No necesitas código adicional</span>, Supabase maneja el registro por invitación.</p>
+
+          <ul class="step-list" style="margin-top:12px">
+            <li>Ir a supabase.com → tu proyecto → Authentication</li>
+            <li>Pestaña "Users" → botón "Invite user"</li>
+            <li>Ingresar el correo del vecino y enviar invitación</li>
+            <li>El vecino recibirá un email para establecer su contraseña</li>
+            <li>Ya puede acceder a VecindarioCam con sus credenciales</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="notifications-section">
+        <h2>Notificaciones</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="notif-card">
+            <div class="notif-info">
+              <h4>Detección de movimiento</h4>
+              <p>Notificación push cuando el bridge detecta movimiento en el video</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked onchange="saveNotifPref('motion', this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+          <div class="notif-card">
+            <div class="notif-info">
+              <h4>Cámara desconectada</h4>
+              <p>Alerta si el bridge no sube grabaciones por más de 10 minutos</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked onchange="saveNotifPref('offline', this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+          <div class="notif-card">
+            <div class="notif-info">
+              <h4>Resumen diario</h4>
+              <p>Email con el resumen de actividad del día anterior</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" onchange="saveNotifPref('daily', this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal-backdrop" id="video-modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modal-title">Grabación</h3>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <video id="modal-video" controls></video>
+    <div class="modal-footer">
+      <span id="modal-date">—</span>
+      <span id="modal-duration">—</span>
+      <span id="modal-camera">QC5 · Estacionamiento</span>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- SUPABASE SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+  // ─────────────────────────────────────────
+  // CONFIG — Reemplaza con tus valores reales
+  // ─────────────────────────────────────────
+  const SUPABASE_URL  = 'https://TU-PROYECTO.supabase.co';
+  const SUPABASE_ANON = 'TU-ANON-KEY';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  let currentUser = null;
+
+  // ─── CLOCK ───
+  setInterval(() => {
+    document.getElementById('live-clock').textContent =
+      new Date().toLocaleTimeString('es-CL', {hour12: false});
+  }, 1000);
+
+  // ─── AUTH ───
+  async function initApp() {
+    // Manejar callback OAuth de Google (el hash #access_token en la URL)
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      // Limpiar el hash de la URL si viene de OAuth redirect
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+      showApp();
+      return;
+    }
+
+    // Escuchar cambios de sesión (cubre el flujo OAuth)
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        if (window.location.hash) {
+          history.replaceState(null, '', window.location.pathname);
+        }
+        showApp();
+      }
+    });
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value;
+    const btn   = document.getElementById('login-btn');
+    const errDiv= document.getElementById('auth-error');
+
+    if (!email || !pass) {
+      showAuthError('Ingresa correo y contraseña.');
+      return;
+    }
+
+    btn.textContent = 'Ingresando...';
+    btn.disabled = true;
+    errDiv.style.display = 'none';
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+      showAuthError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+      btn.textContent = 'Ingresar';
+      btn.disabled = false;
+      return;
+    }
+
+    currentUser = data.user;
+    showApp();
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function doGoogleLogin() {
+    const btn = document.getElementById('google-btn');
+    btn.textContent = 'Redirigiendo a Google...';
+    btn.disabled = true;
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) {
+      showAuthError('No se pudo iniciar Google Login. Verifica la configuración en Supabase → Authentication → Providers.');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.8 18.9 13 24 13c3.1 0 5.8 1.1 7.9 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.2 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-8H6.3C9.7 35.6 16.3 40 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.2C40.5 35.7 44 30.3 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg> Ingresar con Google';
+    }
+  }
+
+  async function doLogout() {
+    await sb.auth.signOut();
+    currentUser = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+
+  function showApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-email-display').textContent = currentUser?.email || '';
+    loadRecordings();
+    checkCameraStatus();
+  }
+
+  // ─── TABS ───
+  function switchTab(tab, btn) {
+    ['live','history','setup'].forEach(t => {
+      document.getElementById('tab-'+t).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'history') loadRecordings();
+  }
+
+  // ─── CAMERA STATUS ───
+  async function checkCameraStatus() {
+    if (!currentUser) return;
+    // Verificar si hay grabaciones en los últimos 15 minutos
+    const cutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data } = await sb.from('recordings')
+      .select('id')
+      .gte('created_at', cutoff)
+      .limit(1);
+
+    const badge = document.getElementById('status-badge');
+    if (data && data.length > 0) {
+      badge.className = 'live-badge';
+      badge.innerHTML = '<div class="live-dot"></div> EN VIVO';
+    } else {
+      badge.className = 'offline-badge';
+      badge.innerHTML = '<div style="width:6px;height:6px;background:var(--red);border-radius:50%"></div> OFFLINE';
+    }
+  }
+
+  // ─── RECORDINGS ───
+  async function loadRecordings() {
+    const grid = document.getElementById('recordings-grid');
+    const countBadge = document.getElementById('rec-count');
+
+    grid.innerHTML = '<div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando...</span></div>';
+
+    const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+    const { data: recs, error } = await sb
+      .from('recordings')
+      .select('*')
+      .gte('started_at', cutoff)
+      .order('started_at', { ascending: false });
+
+    if (error) {
+      grid.innerHTML = '<div class="empty-state"><p style="color:var(--red)">Error cargando grabaciones. Verifica la conexión a Supabase.</p></div>';
+      return;
+    }
+
+    countBadge.textContent = recs ? recs.length + ' grabaciones' : '0 grabaciones';
+
+    if (!recs || recs.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          <p>No hay grabaciones en las últimas 72 horas.<br/>Verifica que el bridge script esté activo.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = recs.map(r => buildRecordingCard(r)).join('');
+  }
+
+  function buildRecordingCard(rec) {
+    const dt = new Date(rec.started_at);
+    const timeStr = dt.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false});
+    const dateStr = dt.toLocaleDateString('es-CL', {weekday:'short', day:'numeric', month:'short'});
+    const dur = rec.duration_sec ? formatDur(rec.duration_sec) : '?';
+    const motionTag = rec.has_motion
+      ? '<span class="tag tag-motion">movimiento</span>'
+      : '<span class="tag tag-normal">normal</span>';
+
+    // Get signed URL for video
+    const videoUrl = `data-path="${rec.storage_path}" data-id="${rec.id}"`;
+
+    return `
+      <div class="recording-card" onclick="openRecording('${rec.id}', '${rec.storage_path}', '${timeStr}', '${dateStr}', '${dur}')">
+        <div class="recording-thumb">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          <div class="play-btn">
+            <div class="play-circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="recording-meta">
+          <div class="rec-time">${timeStr}</div>
+          <div class="rec-date">${dateStr}</div>
+          <div class="rec-tags">
+            ${motionTag}
+            <span class="tag tag-duration">${dur}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function openRecording(id, storagePath, time, date, dur) {
+    if (!storagePath) return;
+
+    // Get signed URL from Supabase Storage
+    const { data, error } = await sb.storage
+      .from('recordings')
+      .createSignedUrl(storagePath, 3600);
+
+    if (error || !data?.signedUrl) {
+      showToast('No se pudo cargar el video', 'warning');
+      return;
+    }
+
+    document.getElementById('modal-title').textContent = `Grabación ${time}`;
+    document.getElementById('modal-date').textContent = `${date} · ${time}`;
+    document.getElementById('modal-duration').textContent = dur;
+    const video = document.getElementById('modal-video');
+    video.src = data.signedUrl;
+    document.getElementById('video-modal').classList.add('open');
+    video.play().catch(() => {});
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('video-modal')) return;
+    document.getElementById('video-modal').classList.remove('open');
+    const v = document.getElementById('modal-video');
+    v.pause();
+    v.src = '';
+  }
+
+  // ─── UTILS ───
+  function formatDur(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  function saveNotifPref(key, val) {
+    localStorage.setItem('notif_' + key, val);
+    showToast(val ? 'Notificación activada' : 'Notificación desactivada', 'success');
+  }
+
+  function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    const dot = type === 'success' ? '#4ade80' : '#fbbf24';
+    toast.innerHTML = `<div style="width:6px;height:6px;background:${dot};border-radius:50%;flex-shrink:0"></div>${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  // ─── ENTER KEY ───
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('auth-screen').style.display !== 'none') {
+      doLogin();
+    }
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ─── INIT ───
+  initApp();
+
+  // Refrescar estado cámara cada 2 minutos
+  setInterval(checkCameraStatus, 120000);
+</script>
+</body>
+</html>
